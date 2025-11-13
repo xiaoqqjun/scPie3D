@@ -20,7 +20,9 @@
 #' @param width Numeric. Width of output PDF in inches (default: 12)
 #' @param height Numeric. Height of output PDF in inches (default: 10)
 #' @param show_legend Logical. Whether to show legend (default: TRUE)
-#' @param legend_position Character. Legend position: "topright", "topleft", "bottomright", "bottomleft" (default: "topright")
+#' @param legend_position Character. Legend position: "topright", "topleft", "bottomright", "bottomleft", "right", "left", "top", "bottom" (default: "topright")
+#' @param legend_outside Logical. If TRUE, place legend outside the plot area (default: FALSE)
+#' @param legend_ncol Numeric. Number of columns for legend (default: 1)
 #' @param main_title Character. Custom main title. If NULL, generates automatic title
 #' @param label_cex Numeric. Label text size (default: 0.9)
 #' @param title_cex Numeric. Title text size (default: 1.5)
@@ -75,6 +77,8 @@ plot_3d_pie <- function(object,
                         height = 10,
                         show_legend = TRUE,
                         legend_position = "topright",
+                        legend_outside = FALSE,
+                        legend_ncol = 1,
                         main_title = NULL,
                         label_cex = 0.9,
                         title_cex = 1.5,
@@ -150,6 +154,26 @@ plot_3d_pie <- function(object,
   
   # Plot for each category
   for (cat in categories) {
+    # Set up layout if legend is outside
+    if (show_legend && legend_outside) {
+      if (legend_position %in% c("right", "left")) {
+        # Horizontal layout
+        if (legend_position == "right") {
+          graphics::layout(matrix(c(1, 2), nrow = 1), widths = c(3, 1))
+        } else {
+          graphics::layout(matrix(c(2, 1), nrow = 1), widths = c(1, 3))
+        }
+      } else {
+        # Vertical layout
+        if (legend_position %in% c("top", "topleft", "topright")) {
+          graphics::layout(matrix(c(2, 1), nrow = 2), heights = c(1, 3))
+        } else {
+          graphics::layout(matrix(c(1, 2), nrow = 2), heights = c(3, 1))
+        }
+      }
+      graphics::par(mar = c(2, 2, 4, 2))
+    }
+    
     # Filter data for current category
     temp_data <- plot_data %>%
       dplyr::filter(!!rlang::sym(category_var) == cat & Freq > 0)
@@ -205,11 +229,42 @@ plot_3d_pie <- function(object,
     
     # Add legend if requested
     if (show_legend) {
-      graphics::legend(legend_position, 
-                      legend = temp_data[[fill_var]],
-                      fill = current_colors,
-                      cex = legend_cex,
-                      bty = "n")
+      if (legend_outside) {
+        # Draw legend in separate panel
+        graphics::par(mar = c(2, 1, 4, 1))
+        graphics::plot.new()
+        
+        # Determine legend position for outside layout
+        if (legend_position == "right") {
+          leg_pos <- "left"
+        } else if (legend_position == "left") {
+          leg_pos <- "right"
+        } else if (legend_position %in% c("top", "topleft", "topright")) {
+          leg_pos <- "bottom"
+        } else {
+          leg_pos <- "top"
+        }
+        
+        graphics::legend(leg_pos, 
+                        legend = temp_data[[fill_var]],
+                        fill = current_colors,
+                        cex = legend_cex,
+                        ncol = legend_ncol,
+                        bty = "n")
+      } else {
+        # Draw legend inside plot area (original behavior)
+        graphics::legend(legend_position, 
+                        legend = temp_data[[fill_var]],
+                        fill = current_colors,
+                        cex = legend_cex,
+                        ncol = legend_ncol,
+                        bty = "n")
+      }
+    }
+    
+    # Reset layout if it was changed
+    if (show_legend && legend_outside) {
+      graphics::layout(1)
     }
     
     # Store results
