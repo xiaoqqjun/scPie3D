@@ -1,0 +1,33 @@
+Package: scPie3D
+Type: Package
+Title: 3D Pie Charts for Single-Cell Data Visualization
+Version: 0.1.0
+Authors@R: 
+    person("xiaoqqjun", 
+           email = "xiaoqqjun@sina.com", 
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0003-1813-1669"))
+Description: Create beautiful 3D pie charts for visualizing cell type 
+    distributions across different groups in single-cell RNA-seq data. 
+    Supports Seurat objects and custom data frames, with flexible 
+    color schemes and display options.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends: 
+    R (>= 4.0.0)
+Imports:
+    plotrix,
+    dplyr,
+    grDevices,
+    graphics,
+    methods,
+    rlang
+Suggests:
+    Seurat,
+    SeuratObject,
+    RColorBrewer,
+    knitr,
+    rmarkdown
+RoxygenNote: 7.2.3
+VignetteBuilder: knitr
