@@ -99,15 +99,22 @@ plot_3d_pie <- function(object,
     dplyr::mutate(percentage = Freq / sum(Freq) * 100) %>%
     dplyr::ungroup()
   
+  # Get all unique fill variable values (for consistent color mapping)
+  all_fill_values <- unique(plot_data[[fill_var]])
+  n_fill_values <- length(all_fill_values)
+  
   # Get or generate colors
   if (is.null(colors)) {
-    colors <- .get_seurat_colors(length(unique(plot_data[[fill_var]])))
+    colors <- .get_seurat_colors(n_fill_values)
   } else {
-    if (length(colors) < length(unique(plot_data[[fill_var]]))) {
+    if (length(colors) < n_fill_values) {
       warning("Not enough colors provided. Expanding color palette.")
-      colors <- grDevices::colorRampPalette(colors)(length(unique(plot_data[[fill_var]])))
+      colors <- grDevices::colorRampPalette(colors)(n_fill_values)
     }
   }
+  
+  # Create named color vector for consistent mapping
+  names(colors) <- all_fill_values
   
   # Get unique categories
   categories <- unique(plot_data[[category_var]])
@@ -134,6 +141,9 @@ plot_3d_pie <- function(object,
                               show_label = show_label,
                               label_threshold = label_threshold)
     
+    # Get colors for current data (maintaining consistency)
+    current_colors <- colors[temp_data[[fill_var]]]
+    
     # Generate title
     if (is.null(main_title)) {
       if (mode == "by_group") {
@@ -151,7 +161,7 @@ plot_3d_pie <- function(object,
     plotrix::pie3D(temp_data$Freq,
                    labels = labels,
                    explode = explode,
-                   col = colors[1:nrow(temp_data)],
+                   col = current_colors,
                    main = title,
                    labelcex = label_cex,
                    theta = theta,
@@ -164,7 +174,7 @@ plot_3d_pie <- function(object,
     if (show_legend) {
       graphics::legend(legend_position, 
                       legend = temp_data[[fill_var]],
-                      fill = colors[1:nrow(temp_data)],
+                      fill = current_colors,
                       cex = legend_cex,
                       bty = "n")
     }
@@ -242,10 +252,22 @@ plot_3d_pie_grid <- function(object,
     dplyr::mutate(percentage = Freq / sum(Freq) * 100) %>%
     dplyr::ungroup()
   
+  # Get all unique fill values for consistent color mapping
+  all_fill_values <- unique(plot_data[[fill_var]])
+  n_fill_values <- length(all_fill_values)
+  
   # Get colors
   if (is.null(colors)) {
-    colors <- .get_seurat_colors(length(unique(plot_data[[fill_var]])))
+    colors <- .get_seurat_colors(n_fill_values)
+  } else {
+    if (length(colors) < n_fill_values) {
+      warning("Not enough colors provided. Expanding color palette.")
+      colors <- grDevices::colorRampPalette(colors)(n_fill_values)
+    }
   }
+  
+  # Create named color vector for consistent mapping
+  names(colors) <- all_fill_values
   
   categories <- unique(plot_data[[category_var]])
   n_categories <- length(categories)
@@ -278,10 +300,13 @@ plot_3d_pie_grid <- function(object,
                         paste0(round(temp_data$percentage, 1), "%"),
                         "")
     
+    # Get colors for current data (maintaining consistency)
+    current_colors <- colors[temp_data[[fill_var]]]
+    
     plotrix::pie3D(temp_data$Freq,
                    labels = if(show_percentage) pct_labels else "",
                    explode = explode,
-                   col = colors[1:nrow(temp_data)],
+                   col = current_colors,
                    main = paste0(cat, "\n(n=", format(sum(temp_data$Freq), big.mark = ","), ")"),
                    labelcex = 1,
                    theta = 0.8,
@@ -295,9 +320,10 @@ plot_3d_pie_grid <- function(object,
   if (show_common_legend) {
     graphics::plot.new()
     all_fills <- unique(plot_data[[fill_var]])
+    legend_colors <- colors[all_fills]
     graphics::legend("center", 
                     legend = all_fills,
-                    fill = colors[1:length(all_fills)],
+                    fill = legend_colors,
                     ncol = ifelse(length(all_fills) > 10, 3, 2),
                     cex = 1.2,
                     title = fill_var,

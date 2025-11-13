@@ -15,8 +15,8 @@ install.packages("scPie3D_0.1.0.tar.gz", repos = NULL, type = "source")
 # Install devtools if needed
 install.packages("devtools")
 
-# Install from GitHub
-devtools::install_github("xiaoqqjun/scPie3D")
+# Install from source
+devtools::install_local("path/to/scPie3D")
 ```
 
 ### Method 3: Install using R CMD
