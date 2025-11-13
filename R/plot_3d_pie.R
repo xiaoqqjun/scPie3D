@@ -25,6 +25,8 @@
 #' @param label_cex Numeric. Label text size (default: 0.9)
 #' @param title_cex Numeric. Title text size (default: 1.5)
 #' @param legend_cex Numeric. Legend text size (default: 0.8)
+#' @param fixed_order Logical. If TRUE, all groups use the same cell type order for consistent positioning (default: FALSE)
+#' @param order_by Character. When fixed_order=TRUE, order by "frequency" (total across all groups) or "name" (alphabetical). Default: "frequency"
 #'
 #' @return Invisibly returns a list containing the plot data for each category
 #'
@@ -76,7 +78,9 @@ plot_3d_pie <- function(object,
                         main_title = NULL,
                         label_cex = 0.9,
                         title_cex = 1.5,
-                        legend_cex = 0.8) {
+                        legend_cex = 0.8,
+                        fixed_order = FALSE,
+                        order_by = "frequency") {
   
   # Input validation
   mode <- match.arg(mode, c("by_group", "by_celltype"))
@@ -116,6 +120,23 @@ plot_3d_pie <- function(object,
   # Create named color vector for consistent mapping
   names(colors) <- all_fill_values
   
+  # Determine fixed order if requested
+  if (fixed_order) {
+    if (order_by == "frequency") {
+      # Order by total frequency across all groups
+      fill_order <- plot_data %>%
+        dplyr::group_by(!!rlang::sym(fill_var)) %>%
+        dplyr::summarise(total_freq = sum(Freq), .groups = 'drop') %>%
+        dplyr::arrange(dplyr::desc(total_freq)) %>%
+        dplyr::pull(!!rlang::sym(fill_var))
+    } else {
+      # Order alphabetically
+      fill_order <- sort(all_fill_values)
+    }
+  } else {
+    fill_order <- NULL
+  }
+  
   # Get unique categories
   categories <- unique(plot_data[[category_var]])
   
@@ -131,8 +152,20 @@ plot_3d_pie <- function(object,
   for (cat in categories) {
     # Filter data for current category
     temp_data <- plot_data %>%
-      dplyr::filter(!!rlang::sym(category_var) == cat & Freq > 0) %>%
-      dplyr::arrange(dplyr::desc(Freq))
+      dplyr::filter(!!rlang::sym(category_var) == cat & Freq > 0)
+    
+    # Apply ordering
+    if (fixed_order && !is.null(fill_order)) {
+      # Use fixed order
+      temp_data[[fill_var]] <- factor(temp_data[[fill_var]], levels = fill_order)
+      temp_data <- temp_data %>%
+        dplyr::arrange(!!rlang::sym(fill_var)) %>%
+        dplyr::filter(!is.na(!!rlang::sym(fill_var)))  # Remove any NAs
+    } else {
+      # Order by frequency within this group (default behavior)
+      temp_data <- temp_data %>%
+        dplyr::arrange(dplyr::desc(Freq))
+    }
     
     # Prepare labels
     labels <- .prepare_labels(temp_data[[fill_var]], 
@@ -210,6 +243,8 @@ plot_3d_pie <- function(object,
 #' @param height Numeric. Height of output PDF (default: 12)
 #' @param ncol Numeric. Number of columns in layout (default: 3)
 #' @param show_common_legend Logical. Show a common legend (default: TRUE)
+#' @param fixed_order Logical. If TRUE, all categories use the same order for consistent positioning (default: TRUE for grid layout)
+#' @param order_by Character. When fixed_order=TRUE, order by "frequency" or "name". Default: "frequency"
 #'
 #' @return Invisibly returns plot data
 #'
@@ -234,7 +269,9 @@ plot_3d_pie_grid <- function(object,
                              width = 18,
                              height = 12,
                              ncol = 3,
-                             show_common_legend = TRUE) {
+                             show_common_legend = TRUE,
+                             fixed_order = TRUE,
+                             order_by = "frequency") {
   
   # Extract and prepare data
   plot_data <- .extract_data(object, group_by, cell_type)
@@ -269,6 +306,23 @@ plot_3d_pie_grid <- function(object,
   # Create named color vector for consistent mapping
   names(colors) <- all_fill_values
   
+  # Determine fixed order if requested
+  if (fixed_order) {
+    if (order_by == "frequency") {
+      # Order by total frequency across all categories
+      fill_order <- plot_data %>%
+        dplyr::group_by(!!rlang::sym(fill_var)) %>%
+        dplyr::summarise(total_freq = sum(Freq), .groups = 'drop') %>%
+        dplyr::arrange(dplyr::desc(total_freq)) %>%
+        dplyr::pull(!!rlang::sym(fill_var))
+    } else {
+      # Order alphabetically
+      fill_order <- sort(all_fill_values)
+    }
+  } else {
+    fill_order <- NULL
+  }
+  
   categories <- unique(plot_data[[category_var]])
   n_categories <- length(categories)
   
@@ -293,8 +347,20 @@ plot_3d_pie_grid <- function(object,
   # Plot each pie
   for (cat in categories) {
     temp_data <- plot_data %>%
-      dplyr::filter(!!rlang::sym(category_var) == cat & Freq > 0) %>%
-      dplyr::arrange(dplyr::desc(Freq))
+      dplyr::filter(!!rlang::sym(category_var) == cat & Freq > 0)
+    
+    # Apply ordering
+    if (fixed_order && !is.null(fill_order)) {
+      # Use fixed order
+      temp_data[[fill_var]] <- factor(temp_data[[fill_var]], levels = fill_order)
+      temp_data <- temp_data %>%
+        dplyr::arrange(!!rlang::sym(fill_var)) %>%
+        dplyr::filter(!is.na(!!rlang::sym(fill_var)))
+    } else {
+      # Order by frequency within this category (default)
+      temp_data <- temp_data %>%
+        dplyr::arrange(dplyr::desc(Freq))
+    }
     
     pct_labels <- ifelse(temp_data$percentage > label_threshold,
                         paste0(round(temp_data$percentage, 1), "%"),

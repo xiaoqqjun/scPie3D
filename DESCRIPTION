@@ -1,7 +1,7 @@
 Package: scPie3D
 Type: Package
 Title: 3D Pie Charts for Single-Cell Data Visualization
-Version: 0.1.1
+Version: 0.1.2
 Authors@R: 
     person("xiaoqqjun", 
            email = "xiaoqqjun@sina.com", 
