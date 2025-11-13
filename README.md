@@ -11,7 +11,7 @@
 You can install the development version of scPie3D from the tar.gz file:
 
 ```r
-install.packages("scPie3D_0.1.0.tar.gz", repos = NULL, type = "source")
+install.packages("scPie3D_0.1.1.tar.gz", repos = NULL, type = "source")
 ```
 
 Or install from source:
@@ -20,8 +20,8 @@ Or install from source:
 # Install devtools if needed
 install.packages("devtools")
 
-# Install scPie3D
-devtools::install_local("path/to/scPie3D")
+# Install from github
+devtools::install_github("xiaoqqjun/scPie3D")
 ```
 
 ## Features
