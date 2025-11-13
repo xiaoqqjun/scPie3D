@@ -734,7 +734,7 @@ help(package = "scPie3D")
 
 ```
 xiaoqqjun (2025). scPie3D: 3D Pie Charts for Single-Cell Data Visualization. 
-R package version 0.1.2. https://github.com/yourusername/scPie3D
+R package version 0.1.2. https://github.com/xiaoqqjun/scPie3D
 ```
 
 ---
