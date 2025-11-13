@@ -20,8 +20,8 @@ Or install from source:
 # Install devtools if needed
 install.packages("devtools")
 
-# Install scPie3D
-devtools::install_local("path/to/scPie3D")
+# Install from GitHub
+devtools::install_github("xiaoqqjun/scPie3D")
 ```
 
 ## Features
